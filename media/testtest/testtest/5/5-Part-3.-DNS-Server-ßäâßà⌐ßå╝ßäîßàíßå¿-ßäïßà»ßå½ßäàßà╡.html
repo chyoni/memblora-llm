@@ -1,0 +1,155 @@
+
+<meta charset="utf-8">
+<html lang="ko">
+<head>
+    <link rel="stylesheet" type="text/css" href="./../style.css" />
+    <title>Part 3. DNS Server 동작 원리</title>
+</head>
+<body id="tt-body-page" class="">
+<div id="wrap" class="wrap-right">
+    <div id="container">
+        <main class="main ">
+            <div class="area-main">
+                <div class="area-view">
+                    <div class="article-header">
+                        <div class="inner-article-header">
+                            <div class="box-meta">
+                                <h2 class="title-article">Part 3. DNS Server 동작 원리</h2>
+                                <div class="box-info">
+                                    <p class="category">Network</p>
+                                    <p class="date">2023-10-02 15:55:12</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="article-view">
+                        <div class="contents_style">
+                            
+
+
+<p data-ke-size="size16">DNS Server를 통해 특정 주소의 IP Address를 알아낸다고 했는데, 그럼 DNS Server는 어떻게 IP Address를 저장하고 관리할까?</p>
+<p data-ke-size="size16">우선, 임의의 서버 호스트가 본인의 IP Address를 <a href="http://www.example.com">www.example.com이라는</a> 주소로 등록하고 싶다고 요청을 한다. 이 요청과 등록의 과정은 아래에서 더 자세히 살펴보자.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16"><b>그럼 DNS Server랑은 어떻게 통신할까?</b></p>
+<p data-ke-size="size16">당연히 DNS Server도 Server이기 때문에 호스트이고 호스트와 통신을 하려면 주소가 필요하다. 이 DNS Server의 주소는 컴퓨터에 네트워크를 연결하는 순간 해당 컴퓨터에 DNS Server IP가 바로 할당된다. 그래서 모든 컴퓨터의 운영체제는 인터넷이 연결된 순간 DNS Server와 통신이 가능하게 된다.</p>
+<p data-ke-size="size16">이건 <b>통신사가 제공하는 DNS Server</b>와 연결되는 것인데 내가 원하는 DNS Server로 바꿀 수도 있다. 이는 Public DNS Server를 이용하면 된다.&nbsp;</p>
+<p data-ke-size="size16">그럼 이제 인터넷이 연결된 호스트는 Part 2에서 언급했던 hosts 파일과 연결된 DNS Server를 통해 특정 주소에 대한 IP를 얻어내고 해당 주소를 가지는 호스트와 통신을 하게 된다. 이것이 동작원리이다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<h3 data-ke-size="size23"><b>DNS Internal</b></h3>
+<p data-ke-size="size16">본 페이지의 개요에서 DNS Server라는 특정 서버와 임의의 호스트가 연결되는 원리를 알아보았는데, 그럼 과연 DNS Server는 단 한대만 존재할까? 아니다. DNS Server는 수십만 대가 있고, 각 서버마다 역할 또한 다르다.&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">도메인 구조가 생각보다 여러 파트로 나뉜다.</p>
+<p data-ke-size="size16">cwchoiit.tistory.com.이라는 주소가 있으면 이 주소가 <b>네 파트</b>로 나뉜다.</p>
+<p><figure class="imageblock alignLeft" >
+    <span data-lightbox="lightbox">
+        <img src="./img/edited_Screenshot 2023-10-02 at 3.00.46 PM.png"  />
+    </span>
+    <figcaption></figcaption>
+</figure></p>
+<p data-ke-size="size16">위 그림에서 각 영역별로 담당하는 DNS Server가 다 다르다.</p>
+<p data-ke-size="size16"><b>그러나 명확한 한 가지는 있다. Root DNS Server는 Top level DNS Server의 리스트를 가지고 있고 Top level DNS Server는 Second DNS Server의 리스트를 가지고 있고 Second level DNS Server는 Sub DNS Server 리스트를 가지고 있고 <u>모든 호스트의 연결된 DNS Server는 최소한 Root DNS Server의 주소는 반드시 알고 있다.</u></b></p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">이러한 구조를 알고 있는 상태에서 만약 내가 cwchoiit.tistory.com. 에 접속하고자 한다면 과정은 아래와 같다.</p>
+<p data-ke-size="size16">1. 내 컴퓨터(호스트)는 Root DNS Server에게 해당 주소를 물어본다.</p>
+<p data-ke-size="size16">2. Root DNS Server는 호스트에게 <b>". com"이라는</b> Top level을 관리하는 Top level DNS Server의 IP를 준다.</p>
+<p data-ke-size="size16">3. 호스트는 Top level DNS Server에게 해당 주소를 물어본다.</p>
+<p data-ke-size="size16">4. Top level DNS Server는 <b>"tistory"</b>라는 Second level을&nbsp;관리하는 Second level DNS Server의 IP를 준다.</p>
+<p data-ke-size="size16">5. 호스트는 Second level DNS Server에게 해당 주소를 물어본다.</p>
+<p data-ke-size="size16">6. Second level DNS Server는 <b>"cwchoiit"</b>라는 Sub level을 관리하는 Sub level DNS Server의 IP를 준다.</p>
+<p data-ke-size="size16">7. 호스트는 Sub level DNS Server에게 해당 주소를 물어본다.</p>
+<p data-ke-size="size16">8. Sub level DNS Server가 cwchoiit.tistory.com. 의 실제 IP 주소를 알려준다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">이러한 세부적인 과정을 거쳐 최종적으로 원하는 IP를 돌려받고 해당 호스트와 통신하게 된다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<h3 data-ke-size="size23"><b>도메인 이름 등록 과정과 원리</b></h3>
+<p><figure class="imageblock alignCenter" >
+    <span data-lightbox="lightbox">
+        <img src="./img/Screenshot 2023-10-02 at 3.30.22 PM.png"  />
+    </span>
+    <figcaption></figcaption>
+</figure></p>
+<p data-ke-size="size16">위 그림을 통해 간단하게 도메인 등록 과정과 원리를 살펴보자. 사실 크게 중요한가 싶긴 하다만(?) 알고 나니 좀 더 기분이 좋아지긴 했다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">일단 최초에 <b>등록자(Register)</b>가 <u>11.22.33.44라는</u> IP Address를 <u>example.com이라는</u> 주소로 등록하고 싶다고 가정해 보자.&nbsp;</p>
+<p data-ke-size="size16">그럼 <b>등록 대행자(Registrar)</b>에게 (gabia.com 같은) 해당 IP를 알려주어야 한다. 등록 대행자는 자신들이 가지고 있는 DNS Server에 해당 IP를 example.com으로 등록하고 그 정보를 <b>ICANN</b>이라는 기관에 알려준다. 이 기관은 Root DNS Server의 모든 리스트를 가지고 있고 Root DNS Server에게 이렇게 말한다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16"><b><span style="background-color: #009a87; color: #ffffff;">"이 example.com이라는 주소를 등록할 건데 너는 Root니까. com을 관리하는 Top level DNS Server에게도 이 사실을 알려줘!"</span></b></p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">그럼 ICANN의 Root DNS Server들 중 하나가 Top level DNS Server의 주소를 알려주고 그 Top level DNS Server가 example이라는 Second level domain을 가지는 DNS Server의 주소를 가지게 된다. 그 DNS Server는 바로 등록대행자가 가지고 있는 DNS Server가 된다.&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16"><u><b>1.</b> 그러니까 Root DNS Server는. com을 관리하는 Top level DNS Server의 주소를 가지게 되고</u> <u><b>2.</b> .com을 관리하는 Top level DNS Server는 example을 관리하는 Second level DNS Server의 주소를 가지게 되고</u> <u><b>3.</b> Second level DNS Server는 곧 등록대행자가 가지고 있는 DNS Server인데 이 서버가 example.com의 실제 IP 주소를 가지고 있게 되는 구조다.</u></p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">이런 식으로 등록을 완료하게 되면 이제 특정 호스트에서 example.com에 접속하기 위해 해당 호스트의 운영체제가 가지고 있는 DNS Server에게 물어본다. 그렇게 물어보면 위 1 - 8까지의 과정을 거쳐 해당 사이트에 접속하게 된다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<h3 data-ke-size="size23"><b>A / NS / CNAME Record</b></h3>
+<p data-ke-size="size16">위 그림에서 보면 A, NS라는 키워드가 사용되었는데 그 부분을 알아보자.</p>
+<p data-ke-size="size16">우선 위 그림에서 <span style="background-color: #333333;"><b><span style="color: #ee2323;">example.com A 11.22.33.44</span></b></span> <b><span style="background-color: #333333; color: #ee2323;">example.com NS a.lana-servers.net</span></b> 이런 한 줄 한 줄이 눈에 보일 것이다.&nbsp;</p>
+<p data-ke-size="size16">이런 한 줄을 "레코드"라고 한다.&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16"><b>A</b>는 IP Address를 의미하고 <b>NS</b>는 Name Server를 의미하는데 레코드 타입이 NS인 경우 해당 주소를 저장한 Name Server가 무엇인지 알려주는 레코드가 되는 것이다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">쉽게 말해</p>
+<p data-ke-size="size16"><u>example.com A 11.22.33.44라는</u> <b>A 레코드</b>는 example.com의 IP가 11.22.33.44라는 것을 의미한다.&nbsp;</p>
+<p data-ke-size="size16"><u>example.com NS a.lana-servers.net이라는</u> <b>NS 레코드</b>는 example.com이라는 주소를 저장한 네임서버가 a.lana-servers.net이라는 것을 의미한다.&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16"><b>CNAME</b>은 canonical name의 약자로, 그냥 별명이라고 생각하면 된다.</p>
+<p data-ke-size="size16"><a href="http://www.example.com">www.example.com</a> CNAME <a href="http://example.com">example.com</a> 이렇게 되어 있으면, <a href="http://www.example.com은">www.example.com은</a> 곧 <a href="http://example.com과">example.com과</a> 같다는 것을 의미한다.&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+<h3 data-ke-size="size23"><b>nslookup</b></h3>
+<p data-ke-size="size16">한 번 실제로 example.com이라는 주소가 어떤 IP Address를 가지는지 DNS Server를 통해 알아보고 싶다면 터미널에 아래와 같은 명령어를 이용하자.</p>
+<pre id="code_1696231953781" class="typescript" data-ke-language="typescript" data-ke-type="codeblock"><code>nslookup example.com</code></pre>
+<p><figure class="imageblock alignLeft" >
+    <span data-lightbox="lightbox">
+        <img src="./img/edited_Screenshot 2023-02-10 at 11.04.44 AM.png"  />
+    </span>
+    <figcaption></figcaption>
+</figure></p>
+<p data-ke-size="size16">실제로 명령어를 입력해보면 다음과 같이 결과가 도출된다. 이는 우리 호스트의 DNS Server에게 example.com의 주소가 무엇인지를 물어보는 명령어이다.</p>
+<p data-ke-size="size16">사진과 같이 <u>93.184.216.34</u>라는 결과를 얻게 된다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">그 위 Server, Address는 DNS Server의 정보다.</p>
+<p data-ke-size="size16">또한, <b>Non-authoritative answer</b>는 위에 작성했다시피 어떤 주소의 실제 IP Address를 알기 위해 꽤나 번잡한 과정을 거쳐 알게 되는데 매번 이렇게 알아내기엔 비효율적이다. 그래서 DNS Server의 시스템도 <b>cache</b>를 사용한다.</p>
+<p data-ke-size="size16">그 cache로부터 알아내는 경우 <b>Non-authoritative answer</b>라고 하는것이다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">그럼 cache 말고 직접 물어보고 싶을 땐 어떻게 할까? DNS Server에게 물어보겠다고 명시적으로 입력해 주면 된다.</p>
+<p data-ke-size="size16">그러나 example.com을 최종적으로 알려주는 DNS Server를 모르기 때문에 먼저 그 server를 알아야 한다.</p>
+<p data-ke-size="size16">그 server를 알기 위해 아래와 같이 입력한다.</p>
+<pre id="code_1696232350613" class="bash" data-ke-language="bash" data-ke-type="codeblock"><code>nslookup -type=ns example.com</code></pre>
+<p><figure class="imageblock alignLeft" >
+    <span data-lightbox="lightbox">
+        <img src="./img/edited_Screenshot 2023-02-10 at 11.10.52 AM.png"  />
+    </span>
+    <figcaption></figcaption>
+</figure></p>
+<p data-ke-size="size16"><b>-type=ns</b> 옵션을 추가하면 DNS Server의 정보를 위 사진과 같이 알려준다.&nbsp;</p>
+<p data-ke-size="size16"><b>Non-authoritative answer</b> 섹션에 nameserver = b.iana-servers.net. / a.iana-servers.net. 을 확인할 수 있다.&nbsp;</p>
+<p data-ke-size="size16">이제 cache를 사용하는 게 아니라 저 서버를 통해 해당 주소를 직접 알아내보자.</p>
+<pre id="code_1696232519114" class="bash" data-ke-language="bash" data-ke-type="codeblock"><code>nslookup example.com a.iana-servers.net</code></pre>
+<p><figure class="imageblock alignLeft" >
+    <span data-lightbox="lightbox">
+        <img src="./img/edited_Screenshot 2023-02-10 at 11.13.00 AM.png"  />
+    </span>
+    <figcaption></figcaption>
+</figure></p>
+<p data-ke-size="size16">결과로부터 Non-authoritative answer 부분이 없어진 것을 확인할 수 있다. 이는 cache를 사용해서 주소의 IP를 알아낸 게 아니라 직접 DNS Server를 통해 알아냈기 때문에 해당 섹션이 사라졌음을 확인할 수 있다.</p>
+<p data-ke-size="size16">&nbsp;</p>
+<p data-ke-size="size16">&nbsp;</p>
+                        </div>
+                        <br/>
+                        <div class="tags">
+                            #DNS #DNS server #A 레코드 #NS 레코드 #도메인 등록 과정 
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>
